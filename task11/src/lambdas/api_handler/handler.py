@@ -112,16 +112,20 @@ class ApiHandler(AbstractLambda):
             )
 
             # Debug Log
-            _LOG.info(f'AWS Cognito Response: {auth_result}')
+            _LOG.info(f'Full AWS Cognito Response: {json.dumps(auth_result, indent=2)}')
+
 
             # Ensure 'AuthenticationResult' is in response
             if 'AuthenticationResult' not in auth_result:
                 _LOG.error('Authentication failed: No AuthenticationResult in response')
                 return self.error_response('Authentication failed.')
+            auth_data = auth_result['AuthenticationResult']
 
-            access_token = auth_result['AuthenticationResult'].get('IdToken')
-
-            if not access_token:
+            # Extract Tokens
+            id_token = auth_data.get('IdToken')
+            access_token = auth_data.get('AccessToken')
+            
+            if not id_token:
                 _LOG.error('Authentication failed: No token received')
                 return self.error_response('Authentication failed. No token received.')
 
@@ -130,7 +134,7 @@ class ApiHandler(AbstractLambda):
                 "headers": {
                     "Content-Type": "application/json"
                 },
-                "body": json.dumps({"token": access_token})
+                "body": json.dumps({"token": id_token})
             }
 
         except cognito_client.exceptions.NotAuthorizedException:
