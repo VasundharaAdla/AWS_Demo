@@ -91,34 +91,46 @@ class ApiHandler(AbstractLambda):
             "body": json.dumps({'message': f'User {email} was created.'})
             }
         
-    def signin(self,email, password):
+    def signin(self, email, password):
         if not re.match(EMAIL_REGEX, email):
             return self.error_response('Invalid email format.')
 
         if not re.match(PASSWORD_REGEX, password):
             return self.error_response('Password must be alphanumeric with special characters and at least 12 characters long.')
 
-        auth_params = {
-            'USERNAME': email,
-            'PASSWORD': password
-        }
-        auth_result = cognito_client.admin_initiate_auth(
-            UserPoolId=CUP_ID,
-            ClientId=CLIENT_ID,
-            AuthFlow='ADMIN_USER_PASSWORD_AUTH', AuthParameters=auth_params)
+        try:
+            auth_params = {
+                'USERNAME': email,
+                'PASSWORD': password
+            }
+            auth_result = cognito_client.admin_initiate_auth(
+                UserPoolId=CUP_ID,
+                ClientId=CLIENT_ID,
+                AuthFlow='ADMIN_USER_PASSWORD_AUTH', 
+                AuthParameters=auth_params
+            )
 
-        if auth_result:
-            access_token = auth_result['AuthenticationResult']['IdToken']
-        else:
-            access_token = None
+            # Ensure AuthenticationResult exists in response
+            if 'AuthenticationResult' not in auth_result:
+                return self.error_response('Authentication failed.')
 
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "body": json.dumps(access_token)
-        }
+            access_token = auth_result['AuthenticationResult'].get('IdToken')
+
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": json.dumps({"token": access_token})
+            }
+    
+        except cognito_client.exceptions.NotAuthorizedException:
+            return self.error_response('Invalid credentials.')
+
+        except Exception as e:
+            _LOG.error(f'Unexpected error during signin: {str(e)}')
+            return self.error_response('Internal server error.')
+    
     def verify_token(self,event):
         auth_header = event.get('headers', {}).get('Authorization', '')
         access_token = auth_header.split(" ")[1]
