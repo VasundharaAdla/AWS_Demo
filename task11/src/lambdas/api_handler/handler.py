@@ -103,18 +103,27 @@ class ApiHandler(AbstractLambda):
                 'USERNAME': email,
                 'PASSWORD': password
             }
+
             auth_result = cognito_client.admin_initiate_auth(
                 UserPoolId=CUP_ID,
                 ClientId=CLIENT_ID,
-                AuthFlow='ADMIN_USER_PASSWORD_AUTH', 
+                AuthFlow='ADMIN_USER_PASSWORD_AUTH',
                 AuthParameters=auth_params
             )
 
-            # Ensure AuthenticationResult exists in response
+            # Debug Log
+            _LOG.info(f'AWS Cognito Response: {auth_result}')
+
+            # Ensure 'AuthenticationResult' is in response
             if 'AuthenticationResult' not in auth_result:
+                _LOG.error('Authentication failed: No AuthenticationResult in response')
                 return self.error_response('Authentication failed.')
 
             access_token = auth_result['AuthenticationResult'].get('IdToken')
+
+            if not access_token:
+                _LOG.error('Authentication failed: No token received')
+                return self.error_response('Authentication failed. No token received.')
 
             return {
                 "statusCode": 200,
@@ -123,13 +132,14 @@ class ApiHandler(AbstractLambda):
                 },
                 "body": json.dumps({"token": access_token})
             }
-    
+
         except cognito_client.exceptions.NotAuthorizedException:
             return self.error_response('Invalid credentials.')
 
         except Exception as e:
             _LOG.error(f'Unexpected error during signin: {str(e)}')
             return self.error_response('Internal server error.')
+
     
     def verify_token(self,event):
         auth_header = event.get('headers', {}).get('Authorization', '')
