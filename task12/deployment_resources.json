@@ -61,6 +61,7 @@
       ]
     }
   },
+
   "${tables_table}": {
     "resource_type": "dynamodb_table",
     "hash_key_name": "id",
@@ -81,6 +82,7 @@
     "autoscaling": [],
     "tags": {}
   },
+
   "api-ui-hoster": {
     "resource_type": "s3_bucket",
     "acl": "private",
@@ -89,7 +91,7 @@
       "Version": "2012-10-17",
       "Statement": [
         {
-          "Sid": "WebSiteHostingGetObject",
+          "Sid": "PublicReadGetObject",
           "Effect": "Allow",
           "Principal": "*",
           "Action": [
@@ -101,24 +103,17 @@
           "Condition": {
             "IpAddress": {
               "aws:SourceIp": [
-                "XXX.XXX.XXX.XXX/32"
+                "18.197.177.98/32"
               ]
             }
           }
         }
       ]
-    },
-    "public_access_block": {
-      "block_public_acls": true,
-      "ignore_public_acls": true,
-      "block_public_policy": true,
-      "restrict_public_buckets": true
-    },
-    "tags": {},
-    "website_hosting": {
-      "enabled": true,
-      "index_document": "index.html",
-      "error_document": "error.html"
-    }
+  },
+  "website_hosting": {
+    "enabled": true,
+    "index_document": "index.html",
+    "error_document": "error.html"
   }
+}
 }

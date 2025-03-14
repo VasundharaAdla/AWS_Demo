@@ -21,7 +21,7 @@ PASSWORD_REGEX = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,
 
 class ApiHandler(AbstractLambda):
     def handle_request(self,event, context):
-
+        
         request_path = event.get('resource','')
         http_method = event.get("httpMethod", "")
 
@@ -40,8 +40,14 @@ class ApiHandler(AbstractLambda):
             return self.signin(email,password)
         elif request_path == '/tables' and http_method == 'GET':
             return self.tables_get_method(event)
+        elif request_path == "/tables/{tableId}" and http_method == "GET":
+            return self.tables_get_by_id_method(event)
         elif request_path == '/tables' and http_method == 'POST':
             return self.tables_post_method(event)
+        elif request_path == '/reservations' and http_method == 'POST':
+            return self.reservations_post_method(event)
+        elif request_path == '/reservations' and http_method == 'GET':
+            return self.reservations_get_method(event)
         else:
             return {
                 "statusCode": 400,
@@ -91,60 +97,38 @@ class ApiHandler(AbstractLambda):
             "body": json.dumps({'message': f'User {email} was created.'})
             }
         
-    def signin(self, email, password):
+    def signin(self,email, password):
         if not re.match(EMAIL_REGEX, email):
             return self.error_response('Invalid email format.')
 
         if not re.match(PASSWORD_REGEX, password):
             return self.error_response('Password must be alphanumeric with special characters and at least 12 characters long.')
 
+        auth_params = {
+            'USERNAME': email,
+            'PASSWORD': password
+        }
         try:
-            auth_params = {
-                'USERNAME': email,
-                'PASSWORD': password
-            }
-
             auth_result = cognito_client.admin_initiate_auth(
                 UserPoolId=CUP_ID,
                 ClientId=CLIENT_ID,
-                AuthFlow='ADMIN_USER_PASSWORD_AUTH',
-                AuthParameters=auth_params
-            )
+                AuthFlow='ADMIN_USER_PASSWORD_AUTH', AuthParameters=auth_params)
 
-            # Debug Log
-            _LOG.info(f'Full AWS Cognito Response: {json.dumps(auth_result, indent=2)}')
-
-
-            # Ensure 'AuthenticationResult' is in response
-            if 'AuthenticationResult' not in auth_result:
-                _LOG.error('Authentication failed: No AuthenticationResult in response')
-                return self.error_response('Authentication failed.')
-            auth_data = auth_result['AuthenticationResult']
-
-            # Extract Tokens
-            id_token = auth_data.get('IdToken')
-            access_token = auth_data.get('AccessToken')
-            
-            if not id_token:
-                _LOG.error('Authentication failed: No token received')
-                return self.error_response('Authentication failed. No token received.')
+            if auth_result:
+                access_token = auth_result['AuthenticationResult']['IdToken']
+            else:
+                access_token = None
 
             return {
                 "statusCode": 200,
                 "headers": {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    #"Authorization": f"Bearer {access_token}"
                 },
-                "body": json.dumps({"token": id_token})
+                "body": json.dumps({"accessToken":access_token})
             }
-
-        except cognito_client.exceptions.NotAuthorizedException:
-            return self.error_response('Invalid credentials.')
-
-        except Exception as e:
-            _LOG.error(f'Unexpected error during signin: {str(e)}')
-            return self.error_response('Internal server error.')
-
-    
+        except Exception:
+            return self.error_response('User does not exist or password is incorrect')
     def verify_token(self,event):
         auth_header = event.get('headers', {}).get('Authorization', '')
         access_token = auth_header.split(" ")[1]
@@ -167,7 +151,7 @@ class ApiHandler(AbstractLambda):
             isVip=body.get('isVip')
             min_oreder=body.get('minOrder')
             data = {
-                'id':str(id),
+                'id':int(id),
                 'number':number,
                 'places':places,
                 'isVip':isVip,
@@ -220,7 +204,134 @@ class ApiHandler(AbstractLambda):
                 "statusCode": 400,
                 "body": json.dumps({"message": "Bad Request"})
             }
+    def tables_get_by_id_method(self,event):
+        try:
+            self.verify_token(event)
+            dynamodb = boto3.resource("dynamodb")
+            tables_table_name = os.environ['tables_table']
+            tables_dynamodb = dynamodb.Table(tables_table_name)
+            table_id = event.get("pathParameters", {}).get("tableId")
+            try:
+                response = tables_dynamodb.get_item(Key={"id": int(table_id)})
+            except Exception as e:
+                print(e)
+            table = response.get("Item", [])
+            
+            formatted_table={
+                    "id": int(table['id']),
+                    "number": int(table['number']),
+                    "places": int(table['places']),
+                    "isVip": bool(table['isVip']),
+                    "minOrder": int(table['minOrder'])
+                }
+            print('table =',formatted_table)
+            return {
+                "statusCode": 200,
+                "body": json.dumps(formatted_table)
+            }
+        except Exception as e:
+            print(e)
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"message": "Bad Request"})
+            }
+    def reservations_post_method(self,event):
+        try:
+            self.verify_token(event)
+            body = json.loads(event['body'])
+            dynamodb = boto3.resource("dynamodb")
 
+            reservations_table_name = os.environ['reservations_table']
+            reservations_dynamodb = dynamodb.Table(reservations_table_name)
+
+            tables_table_name = os.environ['tables_table']
+            tables_dynamodb = dynamodb.Table(tables_table_name)
+
+            table_number = body.get('tableNumber')
+            client_name = body.get('clientName')
+            phone_number = body.get('phoneNumber')
+            date = body.get('date')
+            slot_time_start = body.get('slotTimeStart')
+            slot_time_end = body.get('slotTimeEnd')
+            try:
+                datetime.strptime(date, "%Y-%m-%d")
+            except ValueError:
+                return self.error_response("Invalid date format. Expected yyyy-MM-dd.")
+            try:
+                datetime.strptime(slot_time_start, "%H:%M")
+                datetime.strptime(slot_time_end, "%H:%M")
+            except ValueError:
+                return self.error_response("Invalid time format. Expected HH:MM.")
+            
+            # -- works fine -- ^
+
+            table_response = tables_dynamodb.scan(
+            FilterExpression="#num = :tableNumber",
+            ExpressionAttributeNames={"#num": "number"},
+            ExpressionAttributeValues={":tableNumber": table_number}
+            )
+            tables = table_response.get('Items', [])
+            if not tables:
+                return self.error_response(f"Table {table_number} does not exist.")
+
+            reservation_response = reservations_dynamodb.scan(
+            FilterExpression="tableNumber = :tableNumber",
+            ExpressionAttributeValues={":tableNumber": table_number},
+
+            )
+            existing_reservations = reservation_response.get('Items', [])
+            if existing_reservations:
+                return self.error_response(f"Table {table_number} is occupied")
+            
+            id = str(uuid.uuid4())
+            reservation_data = {
+            'id': id,  
+            'tableNumber': table_number,
+            'clientName': client_name,
+            'phoneNumber': phone_number,
+            'date': date,
+            'slotTimeStart': slot_time_start,
+            'slotTimeEnd': slot_time_end
+            }
+            reservations_dynamodb.put_item(Item=reservation_data)
+            return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({'reservationId':id})
+            }
+        except Exception as e:
+            print(str(e))
+            return self.error_response("Failed to create reservation.")
+        
+    def reservations_get_method(self,event):
+        try:
+            self.verify_token(event)
+            dynamodb = boto3.resource("dynamodb")
+            reservations_table_name = os.environ['reservations_table']
+            reservations_dynamodb = dynamodb.Table(reservations_table_name)
+            response = reservations_dynamodb.scan()
+            tables = response.get("Items", [])
+            reserved_tables = []
+            for item in tables:
+                reserved_tables.append({
+                    
+                "tableNumber": int(item['tableNumber']),
+                'clientName': str(item['clientName']),
+                'phoneNumber': str(item['phoneNumber']),
+                'date': str(item['date']),
+                'slotTimeStart': str(item['slotTimeStart']),
+                'slotTimeEnd': str(item['slotTimeEnd'])           
+                })
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"reservations": reserved_tables})
+            }
+        except Exception as e:
+            print(e)
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"message": "Bad Request"})
+            }
     def error_response(self,message):
         return {
             "statusCode": 400,
