@@ -1,0 +1,12 @@
+2025-03-14 09:27:20,103 [INFO] USER:chanchal_anand s3_resource.py:40:validate_bucket_name LOG: Starting validating bucket name 'syndicate-education-platform-custom-sandbox-artifacts-6620'
+2025-03-14 09:27:20,103 [INFO] USER:chanchal_anand s3_resource.py:73:validate_bucket_name LOG: Finished validating bucket name 'syndicate-education-platform-custom-sandbox-artifacts-6620'
+2025-03-14 09:27:20,103 [INFO] USER:chanchal_anand helper.py:525:convert LOG: Stripping run_id:JAP-08,run_type:stm,type:user,user_id:ee3a8896 from "," a bit..
+2025-03-14 09:27:20,103 [INFO] USER:chanchal_anand helper.py:529:convert LOG: Converting: run_id:JAP-08,run_type:stm,type:user,user_id:ee3a8896 to dict..
+2025-03-14 09:27:20,104 [INFO] USER:chanchal_anand helper.py:541:convert LOG: Converted to such a dict: {'run_id': 'JAP-08', 'run_type': 'stm', 'type': 'user', 'user_id': 'ee3a8896'}
+2025-03-14 09:27:22,134 [WARNING] USER:chanchal_anand generator.py:76:generate_configuration_files LOG: The config_path property is not specified. The working directory is used
+2025-03-14 09:27:22,135 [WARNING] USER:chanchal_anand generator.py:93:generate_configuration_files LOG: The "project_path" property is not specified. The working directory will be used as a project path. To change the path, edit the syndicate.yml by path C:\Users\chanchal_anand\Desktop\Syndicate-work\demo\task11\.syndicate-config-dev
+2025-03-14 09:27:22,142 [INFO] USER:chanchal_anand generator.py:155:generate_configuration_files LOG: Syndicate initialization has been completed. 
+Set SDCT_CONF:
+Unix: export SDCT_CONF="C:\Users\chanchal_anand\Desktop\Syndicate-work\demo\task11\.syndicate-config-dev"
+Windows: setx SDCT_CONF C:\Users\chanchal_anand\Desktop\Syndicate-work\demo\task11\.syndicate-config-dev
+2025-03-14 09:27:22,146 [INFO] USER:chanchal_anand helper.py:330:timed LOG: Stage config, elapsed time: 0:00:02.041508
