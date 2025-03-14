@@ -1,0 +1,17 @@
+account_id: '376129861747'
+deploy_target_bucket: syndicate-education-platform-custom-sandbox-artifacts-6620/e115d8ed/task12
+expiration: 2025-03-14 02:12:29.804326+00:00
+extended_prefix_mode: true
+iam_permissions_boundary: undefined
+project_path: C:\Practice\AWS_Demo\task12
+region: eu-west-1
+resources_prefix: cmtr-e115d8ed-
+tags:
+  run_id: JAP-08
+  run_type: stm
+  type: user
+  user_id: e115d8ed
+temp_aws_access_key_id: ASIAVPEYWHBZY3B7SEK7
+temp_aws_secret_access_key: LiUB4PI9WLfx2Hx7xaBvZx86nlHdHjirKEZ1pd/f
+temp_aws_session_token: IQoJb3JpZ2luX2VjEJr//////////wEaCXVzLWVhc3QtMSJGMEQCIEyPkY0L0lYS6pSiR7V+06CXmtgz8Ne1EpYKmFFHpRdxAiAIOj8i71bSEXCvWKUYsVxHFR/KFbseLXrSpPKtfVZgbSrhAgjj//////////8BEAAaDDM3NjEyOTg2MTc0NyIMXcRgw6GWPPylmvVxKrUCGrM1CFP9ofcqQUOdvDaKsEtevlHiZgdFaUZloyn9rH2L7pBBpIMv0hZtohBuTQcYQuvAw+czev8MIgCUA3pI40j4pmjqzOWD7iLEugj1vqWZqURnqF0Jl0OTdkCSGc2oDq9enV5jviPFVIjkHFbawecu6NZH6L7lJ6LSwWmFitmnGKo4S+mofjT0nt+Nq8kmQOJh80d3eKx9E9i3aGGxh2kQgfr6OsITTTVUbccS4PCzpPo6WCpH1sn/rTeoXJZwC7cfTihT5kBqM5lk53gZ5ETmOVlrLNpOVhl8cwXm+Qtn/9W3JiTY99Jk2Us+iINlu9MWXc2t+U1o9pnb/6Li+7lGfJh9H1kw3DcztDyB05ZTlvjvmXsV0rTJzMRu0+O0phfgcrDPCkADyjTgrFRseRCJculaMM+Jzr4GOp4BgRGjFT+zDXuJCTSGY7KpadL+eKgi76JiFi7WidBo+/QhWtAur9j+yoMN1flNCd73k1EzfVOgOy8H/dXzaAUU6PbIwrzNuGHaA6CNVpBNZz2liKR9U1lHPrNn9oTeb0N0uogXG06pDd+kAmTvTr4HbguEwGiJQuR1jXB2iIJ3He44AmUlCfw99QcMpDyeCAfxFmK88DPJBv+1G9S1M2I=
+use_temp_creds: false

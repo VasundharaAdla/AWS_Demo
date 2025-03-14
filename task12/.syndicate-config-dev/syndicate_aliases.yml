@@ -1,0 +1,7 @@
+account_id: '376129861747'
+lambdas_alias_name: learn
+tables_table: Tables
+reservations_table: Reservations
+booking_userpool: simple-booking-userpool
+logs_expiration: 30
+region: eu-west-1
